@@ -1,0 +1,3 @@
+class PostConstruct {
+  const PostConstruct();
+}

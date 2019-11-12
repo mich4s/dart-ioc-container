@@ -1,0 +1,4 @@
+enum ComponentType {
+  singleton,
+  prototype,
+}
