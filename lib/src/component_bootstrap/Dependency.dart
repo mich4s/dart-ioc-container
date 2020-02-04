@@ -10,11 +10,11 @@ class Dependency {
 
   Dependency(this.componentBootstrap);
 
-  Object get component {
+  Future<Object> get component async {
     Object component = this.componentBootstrap.getComponent(_injections);
     InstanceMirror instanceMirror = reflect(component);
-    this._injectDependencies(instanceMirror);
-    this._invokePostConstructors(instanceMirror);
+    await this._injectDependencies(instanceMirror);
+    await this._invokePostConstructors(instanceMirror);
     return component;
   }
 
@@ -26,15 +26,17 @@ class Dependency {
     this._postConstructors.addAll(postConstructors);
   }
 
-  void _invokePostConstructors(InstanceMirror instanceMirror) {
-    this._postConstructors.forEach((Symbol name) {
-      instanceMirror.invoke(name, []);
-    });
+  void _invokePostConstructors(InstanceMirror instanceMirror) async {
+    for(Symbol name in this._postConstructors) {
+      await instanceMirror.invoke(name, []);
+    }
   }
 
-  void _injectDependencies(InstanceMirror instanceMirror) {
-    this._injections.forEach((String name, Type type) {
-      instanceMirror.setField(Symbol(name), Container().getComponent(type));
-    });
+  void _injectDependencies(InstanceMirror instanceMirror) async {
+
+    for(String name in this._injections.keys) {
+      Type type = this._injections[name];
+      instanceMirror.setField(Symbol(name), await Application().getComponent(type));
+    }
   }
 }

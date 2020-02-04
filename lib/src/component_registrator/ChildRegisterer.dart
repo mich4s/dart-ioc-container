@@ -28,7 +28,7 @@ class ChildRegisterer {
     variables.forEach((Symbol name, VariableMirror variable) {
       Type type = variable.type.reflectedType;
       dep.addInjection(MirrorSystem.getName(name), type);
-      Container().registerComponent(type, reflectClass(type));
+      Application().registerComponent(type, reflectClass(type));
     });
   }
 

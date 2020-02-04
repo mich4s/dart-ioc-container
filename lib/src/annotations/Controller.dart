@@ -1,18 +1,17 @@
 import 'dart:mirrors';
 
 import 'package:ioc/ioc.dart';
-import 'package:ioc/src/annotations/Prototype.dart';
 import 'package:ioc/src/annotations/RequestMapping.dart';
 import 'package:ioc/src/request/ControllerAction.dart';
 
-class Controller extends Prototype {
+class Controller extends Singleton {
   final String url;
 
   const Controller(this.url);
 
   @override
   void onRegister(Type type) {
-    ClassMirror controllerMirror = Container().getComponentReflection(type);
+    ClassMirror controllerMirror = Application().getComponentReflection(type);
     controllerMirror.instanceMembers
         .forEach((Symbol action, MethodMirror method) {
       try {

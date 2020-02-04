@@ -1,6 +1,6 @@
 library ioc;
 
-export 'src/Container.dart';
+export 'src/Application.dart';
 export 'src/annotations/Component.dart';
 export 'src/annotations/Controller.dart';
 export 'src/annotations/Inject.dart';

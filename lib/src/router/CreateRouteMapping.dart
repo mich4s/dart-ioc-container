@@ -16,6 +16,6 @@ class CreateRouteMapping {
   }
 
   void serve() async {
-    var server = await io.serve(app.handler, 'localhost', 3000);
+    await io.serve(app.handler, 'localhost', 3000);
   }
 }

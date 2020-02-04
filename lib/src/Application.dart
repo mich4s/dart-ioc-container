@@ -8,20 +8,20 @@ import 'package:ioc/src/component_bootstrap/Dependency.dart';
 import 'package:ioc/src/component_registrator/ChildRegisterer.dart';
 import 'package:ioc/src/component_registrator/RegisterInvoker.dart';
 
-class Container {
-  static Container _instance = Container._internal();
+class Application {
+  static Application _instance = Application._internal();
 
   MirrorSystem mirrorSystem = currentMirrorSystem();
   IsolateMirror isolateMirror;
   Uri libraryUri;
 
-  Container._internal() {
+  Application._internal() {
     this.isolateMirror = mirrorSystem.isolate;
     this.libraryUri = this.isolateMirror.rootLibrary.uri;
   }
 
-  factory Container() {
-    return Container._instance;
+  factory Application() {
+    return Application._instance;
   }
 
   Map<Type, Dependency> _components = {};
@@ -37,7 +37,7 @@ class Container {
     });
   }
 
-  dynamic getComponent(Type component) {
+  Future<Object> getComponent(Type component) {
     if (this._components[component] != null) {
       return this._components[component].component;
     }
@@ -48,11 +48,11 @@ class Container {
     return reflectClass(component);
   }
 
-  void registerComponents(List<Type> components) {
-    components.forEach((Type component) {
-      ClassMirror componentReflection = this.getComponentReflection(component);
-      this.registerComponent(component, componentReflection);
-    });
+  Future<void> registerComponents(List<Type> components) async {
+    for(Type component in components) {
+      ClassMirror componentReflection = await this.getComponentReflection(component);
+      await this.registerComponent(component, componentReflection);
+    }
   }
 
   void registerComponent(Type type, ClassMirror reflection) {

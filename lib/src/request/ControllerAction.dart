@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:mirrors';
 
 import 'package:ioc/ioc.dart';
@@ -6,17 +5,19 @@ import 'package:ioc/src/annotations/parameters/ActionParam.dart';
 import 'package:ioc/src/exceptions/CoreException.dart';
 import 'package:shelf/shelf.dart';
 
+typedef dynamic MiddyCallback(Request request, dynamic previous);
+
 class ControllerAction {
-  void register(String method, String url, Type type, Symbol action) {
+  void register(String method, String url, Type type, Symbol action) async {
+    var controller = await Application().getComponent(type);
+    ClassMirror tmp = reflectType(type);
+    MethodMirror actionMirror = tmp.declarations[action];
+    Map<Symbol, List<Function>> parameters =
+        this._prepareMethodParameters(actionMirror);
     CreateRouteMapping().mapRequest(method, url, (Request request) async {
       try {
-        var controller = Container().getComponent(type);
-        ClassMirror tmp = reflectType(type);
-        MethodMirror actionMirror = tmp.declarations[action];
-        Map<String, dynamic> requestBody = await this._requestBody(request);
-        List parameters = this._getParamsList(actionMirror.parameters,
-            request.context['shelf_router/params'], requestBody);
-        var response = reflect(controller).invoke(action, parameters);
+        List actionParams = await this._resolveParameters(parameters, request);
+        var response = reflect(controller).invoke(action, actionParams);
         return Response.ok(response.reflectee.toString());
       } catch (e) {
         if (e is CoreException) {
@@ -28,34 +29,39 @@ class ControllerAction {
     });
   }
 
-  List<dynamic> _getParamsList(List<ParameterMirror> parameters,
-      Map<String, dynamic> routeParams, Map<String, dynamic> requestBody) {
-    List<dynamic> parsed = [];
-    parameters.forEach((ParameterMirror parameter) {
-      try {
-        ActionParam actionParam = parameter.metadata
-            .firstWhere((InstanceMirror instanceMirror) =>
-                instanceMirror.reflectee is ActionParam)
-            .reflectee;
-        parsed.add(actionParam.perform(
-          routeParams: routeParams,
-          requestBody: requestBody,
-        ));
-      } catch (e) {
-        if (e is CoreException) {
-          rethrow;
-        }
+  Future<List<dynamic>> _resolveParameters(
+    Map<Symbol, List<MiddyCallback>> parameters,
+    Request request,
+  ) async {
+    List<dynamic> response = [];
+    for (Symbol name in parameters.keys) {
+      List<MiddyCallback> middlewares = parameters[name];
+      var value;
+      for (var middleware in middlewares) {
+        value = await middleware(request, value);
       }
-    });
-    return parsed;
+      response.add(value);
+    }
+    return response;
   }
 
-  Future<Map<String, dynamic>> _requestBody(Request request) async {
-    String body = await request.readAsString();
-    try {
-      return json.decode(body);
-    } catch (e) {
-      return {};
+  Map<Symbol, List<MiddyCallback>> _prepareMethodParameters(MethodMirror mirror) {
+    Map<Symbol, List<MiddyCallback>> parameters = {};
+    var parametersMirror = mirror.parameters;
+    for (var paramMirror in parametersMirror) {
+      parameters[paramMirror.simpleName] = [];
+      for (var metadata in paramMirror.metadata) {
+        if (metadata.reflectee is ActionParam) {
+          parameters[paramMirror.simpleName].add(this
+              ._registerParameterMiddleware(
+                  paramMirror.simpleName, metadata.reflectee));
+        }
+      }
     }
+    return parameters;
+  }
+
+  MiddyCallback _registerParameterMiddleware(Symbol name, ActionParam annotation) {
+    return annotation.onExecute;
   }
 }

@@ -1,6 +1,6 @@
 import 'dart:mirrors';
 
-import 'package:ioc/src/Container.dart';
+import 'package:ioc/ioc.dart';
 import 'package:ioc/src/component_bootstrap/ComponentType.dart';
 import 'package:ioc/src/component_bootstrap/PrototypeBootstrap.dart';
 import 'package:ioc/src/component_bootstrap/SingletonBootstrap.dart';
@@ -39,7 +39,7 @@ abstract class ComponentBootstrap {
     InstanceMirror componentInstance =
         component.newInstance(constructorSymbol, []);
     toInject.forEach((Symbol name, Type type) {
-      Object dependency = Container().getComponent(type);
+      Object dependency = Application().getComponent(type);
       try {
         componentInstance.setField(name, dependency);
       } catch (e) {

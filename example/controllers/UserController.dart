@@ -10,7 +10,7 @@ import '../services/UserService.dart';
 class UserController {
   @PostConstruct()
   void initialize() {
-    print("Pre initialization");
+    print("Pre initialization UserController");
   }
 
   @Inject() //singleton

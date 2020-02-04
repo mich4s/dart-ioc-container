@@ -1,8 +1,7 @@
+import 'package:shelf/shelf.dart';
+
 abstract class ActionParam {
   const ActionParam();
 
-  dynamic perform({
-    Map<String, String> routeParams,
-    Map<String, dynamic> requestBody,
-  });
+  dynamic onExecute(Request request, dynamic previousValue);
 }

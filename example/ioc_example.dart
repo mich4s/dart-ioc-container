@@ -1,12 +1,12 @@
 library ioc_example;
 
 import 'package:ioc/ioc.dart';
+import './controllers/UserController.dart';
 
-main() {
-  Container container = Container();
-  container.loadPackage().then((s) {
-    Map registeredComponents = container.components;
-    assert(registeredComponents.length == 4);
-    CreateRouteMapping().serve();
-  });
+main() async {
+  Application application = Application();
+  await application.registerComponents([
+    UserController
+  ]);
+  await CreateRouteMapping().serve();
 }

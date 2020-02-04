@@ -3,17 +3,12 @@ import 'dart:mirrors';
 import 'package:ioc/src/annotations/parameters/ActionParam.dart';
 import 'package:ioc/src/annotations/parameters/validators/FieldValidation.dart';
 import 'package:ioc/src/exceptions/ValidationException.dart';
+import 'package:shelf/src/request.dart';
 
 class Valid extends ActionParam {
   final Type type;
 
   const Valid(this.type);
-
-  @override
-  perform({Map<String, String> routeParams, Map<String, dynamic> requestBody}) {
-    ClassMirror reflected = reflectType(this.type);
-    return this._constructModel(reflected, requestBody);
-  }
 
   _constructModel(ClassMirror model, Map<String, dynamic> requestBody) {
     InstanceMirror instance =
@@ -55,5 +50,10 @@ class Valid extends ActionParam {
     } catch (e) {
       return false;
     }
+  }
+
+  @override
+  void onExecute(Request request, prev) {
+    // TODO: implement onExecute
   }
 }
